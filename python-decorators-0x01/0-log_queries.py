@@ -1,5 +1,6 @@
 import sqlite3
 import functools
+from datetime import datetime
 
 
 def log_queries():
@@ -20,7 +21,7 @@ def log_queries():
                     if isinstance(a, str) and a.strip().upper().startswith(('SELECT', 'INSERT', 'UPDATE', 'DELETE')):
                         query = a
                         break
-            print(f"Executing SQL query: {query}")
+            print(f"{datetime.now().isoformat()} - Executing SQL query: {query}")
             return func(*args, **kwargs)
 
         return wrapper
