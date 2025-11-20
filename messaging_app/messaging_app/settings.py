@@ -3,6 +3,7 @@ This file is intentionally small — adapt to your project settings as needed.
 """
 
 from datetime import timedelta
+from rest_framework.pagination import PageNumberPagination
 
 SECRET_KEY = "replace-me-with-secure-key"
 DEBUG = True
@@ -38,6 +39,7 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
     ),
     "DEFAULT_PAGINATION_CLASS": "messaging_app.chats.pagination.MessagePagination",
+    "PAGE_SIZE": 20,
 }
 
 from rest_framework.settings import api_settings  # noqa: E402
