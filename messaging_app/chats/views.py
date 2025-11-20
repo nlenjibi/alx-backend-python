@@ -34,6 +34,22 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsParticipantOfConversation]
     pagination_class = MessagePagination
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    ordering_fields = ["-timestamp"]
+    search_fields = ["content"]
+
+
+class ConversationViewSet(viewsets.ModelViewSet):
+    """ViewSet for conversations. Only participants can access."""
+
+    queryset = Conversation.objects.all()
+    serializer_class = ConversationSerializer
+    authentication_classes = [JWTOrSessionAuthentication]
+    permission_classes = [IsParticipantOfConversation]
+    pagination_class = MessagePagination
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    ordering_fields = ["-updated", "-created"]
+    search_fields = ["title"]
+
     filterset_class = MessageFilter
     ordering_fields = ["timestamp"]
     search_fields = ["content"]
