@@ -13,6 +13,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "rest_framework",
     "rest_framework_simplejwt",
+    "django_filters",
     "messaging_app.chats",
 ]
 
@@ -31,6 +32,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+        "rest_framework.filters.SearchFilter",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "messaging_app.chats.pagination.MessagePagination",
 }
 
 from rest_framework.settings import api_settings  # noqa: E402
