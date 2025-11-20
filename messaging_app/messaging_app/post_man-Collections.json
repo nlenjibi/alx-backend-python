@@ -16,6 +16,20 @@
   "item": [
     {
       "name": "Obtain Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json.access) { pm.collectionVariables.set('access_token', json.access); }",
+              "if (json.refresh) { pm.collectionVariables.set('refresh_token', json.refresh); }"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -35,6 +49,19 @@
     },
     {
       "name": "Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "if (json.access) { pm.collectionVariables.set('access_token', json.access); }"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -54,6 +81,19 @@
     },
     {
       "name": "Create Conversation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 201 or 200', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+              "var json = pm.response.json();",
+              "if (json.id) { pm.collectionVariables.set('conversation_id', json.id); } else if (json.pk) { pm.collectionVariables.set('conversation_id', json.pk); }"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
