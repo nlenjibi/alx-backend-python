@@ -7,6 +7,8 @@ from unittest.mock import patch, Mock, PropertyMock
 from client import GithubOrgClient
 import fixtures
 
+# Integration tests for `GithubOrgClient` (test metadata comment)
+
 
 class TestGithubOrgClient(unittest.TestCase):
     @parameterized.expand(["google", "abc"])
