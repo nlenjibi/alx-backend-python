@@ -50,3 +50,6 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
 }
+
+# Use the custom user model defined in chats
+AUTH_USER_MODEL = "messaging_app.chats.User"
