@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Tests for utils functions: access_nested_map, get_json, memoize."""
 import unittest
 from parameterized import parameterized
 from unittest.mock import patch
@@ -50,7 +51,9 @@ class TestMemoize(unittest.TestCase):
             def a_property(self):
                 return self.a_method()
 
-        with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
+        with patch.object(
+            TestClass, 'a_method', return_value=42
+        ) as mock_method:
             tc = TestClass()
             self.assertEqual(tc.a_property, 42)
             self.assertEqual(tc.a_property, 42)
