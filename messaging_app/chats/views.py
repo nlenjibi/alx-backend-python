@@ -28,7 +28,12 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Optionally filter messages by `conversation_id` query parameter."""
         qs = Message.objects.all()
-        conv_id = self.request.query_params.get("conversation_id") or self.request.query_params.get("conversation")
+        # support query param or nested URL lookup (conversation_pk)
+        conv_id = (
+            self.request.query_params.get("conversation_id")
+            or self.request.query_params.get("conversation")
+            or self.kwargs.get("conversation_pk")
+        )
         if conv_id:
             try:
                 return Message.objects.filter(conversation__conversation_id=conv_id)
@@ -38,7 +43,12 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         # Ensure the requesting user is a participant of the conversation
-        conv_id = request.data.get("conversation") or request.data.get("conversation_id") or request.data.get("conversationId")
+        conv_id = (
+            request.data.get("conversation")
+            or request.data.get("conversation_id")
+            or request.data.get("conversationId")
+            or self.kwargs.get("conversation_pk")
+        )
         if not conv_id:
             return Response({"detail": "conversation_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
