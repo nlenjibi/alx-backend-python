@@ -8,6 +8,7 @@ import fixtures
 
 
 class TestGithubOrgClient(unittest.TestCase):
+    """Unit tests for `GithubOrgClient` class (unit level)."""
 
     @parameterized.expand([
         ("google",),
@@ -58,6 +59,7 @@ class TestGithubOrgClient(unittest.TestCase):
     (fixtures.org_payload, fixtures.repos_payload, fixtures.expected_repos, fixtures.apache2_repos),
 ])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
+    """Integration tests for `GithubOrgClient` using fixtures and patched requests."""
 
     @classmethod
     def setUpClass(cls):
