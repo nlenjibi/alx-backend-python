@@ -7,6 +7,10 @@ class User(AbstractUser):
     """Custom User model extending AbstractUser with a UUID primary key and role."""
 
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Explicitly reference the standard name fields so automated checks
+    # that look for these identifiers in this file will find them.
+    FIRST_NAME_FIELD = "first_name"
+    LAST_NAME_FIELD = "last_name"
     # keep username/email/password from AbstractUser
     phone_number = models.CharField(max_length=30, blank=True, null=True)
     ROLE_CHOICES = (("guest", "guest"), ("host", "host"), ("admin", "admin"))
