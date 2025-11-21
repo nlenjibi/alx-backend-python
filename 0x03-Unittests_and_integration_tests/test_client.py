@@ -5,6 +5,13 @@ from parameterized import parameterized, parameterized_class
 from unittest.mock import patch, Mock, PropertyMock
 
 from client import GithubOrgClient
+import os
+import sys
+
+# Ensure local test directory is first on sys.path so we import the
+# `fixtures` module from this folder, not an installed package named `fixtures`.
+sys.path.insert(0, os.path.dirname(__file__))
+
 import fixtures
 
 # Integration tests for `GithubOrgClient` (test metadata comment)
