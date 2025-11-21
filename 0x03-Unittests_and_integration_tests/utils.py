@@ -1,47 +1,75 @@
 #!/usr/bin/env python3
-"""Utility functions for unit tests.
-
-Provides: access_nested_map, get_json, memoize
+"""Generic utilities for github org client.
 """
-from functools import wraps
 import requests
+from functools import wraps
+from typing import (
+    Mapping,
+    Sequence,
+    Any,
+    Dict,
+    Callable,
+)
+
+__all__ = [
+    "access_nested_map",
+    "get_json",
+    "memoize",
+]
 
 
-def access_nested_map(nested_map, path):
-    """Access a nested map using the sequence of keys in `path`.
-
-    Raises KeyError if a key is missing.
+def access_nested_map(nested_map: Mapping, path: Sequence) -> Any:
+    """Access nested map with key path.
+    Parameters
+    ----------
+    nested_map: Mapping
+        A nested map
+    path: Sequence
+        a sequence of key representing a path to the value
+    Example
+    -------
+    >>> nested_map = {"a": {"b": {"c": 1}}}
+    >>> access_nested_map(nested_map, ["a", "b", "c"])
+    1
     """
-    current = nested_map
     for key in path:
-        if isinstance(current, dict) and key in current:
-            current = current[key]
-        else:
+        if not isinstance(nested_map, Mapping):
             raise KeyError(key)
-    return current
+        nested_map = nested_map[key]
+
+    return nested_map
 
 
-def get_json(url):
-    """Get JSON payload from `url` using requests.get()."""
-    resp = requests.get(url)
-    return resp.json()
-
-
-def memoize(func):
-    """Decorator that caches a method call result as a property on first access.
-
-    Usage:
-        @memoize
-        def prop(self):
-            return expensive()
+def get_json(url: str) -> Dict:
+    """Get JSON from remote URL.
     """
-    attr_name = "_cached_" + func.__name__
+    response = requests.get(url)
+    return response.json()
 
-    @property
-    @wraps(func)
-    def wrapper(self):
+
+def memoize(fn: Callable) -> Callable:
+    """Decorator to memoize a method.
+    Example
+    -------
+    class MyClass:
+        @memoize
+        def a_method(self):
+            print("a_method called")
+            return 42
+    >>> my_object = MyClass()
+    >>> my_object.a_method
+    a_method called
+    42
+    >>> my_object.a_method
+    42
+    """
+    attr_name = "_{}".format(fn.__name__)
+
+    @wraps(fn)
+    def memoized(self):
+        """memoized wraps"""
         if not hasattr(self, attr_name):
-            setattr(self, attr_name, func(self))
+            setattr(self, attr_name, fn(self))
         return getattr(self, attr_name)
 
-    return wrapper
+    return property(memoized)
