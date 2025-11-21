@@ -4,7 +4,16 @@ from unittest.mock import patch, PropertyMock, Mock
 from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
-import fixtures
+import os
+import importlib.util
+
+# Load fixtures.py from this directory to avoid import collisions
+spec = importlib.util.spec_from_file_location(
+    "test_fixtures",
+    os.path.join(os.path.dirname(__file__), "fixtures.py"),
+)
+fixtures = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(fixtures)
 
 
 class TestGithubOrgClient(unittest.TestCase):
