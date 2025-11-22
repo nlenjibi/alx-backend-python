@@ -8,32 +8,19 @@ from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
 
-try:
-    import fixtures
-except Exception:
-    # fallback: load fixtures.py from this directory
-    import importlib.util as _il
+# Load the local fixtures.py into a private namespace by executing its code.
+# This avoids collisions with other modules named `fixtures` on sys.path.
+_fixtures_ns = {}
+_fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
+with open(_fixtures_path, 'r', encoding='utf-8') as _f:
+    exec(_f.read(), _fixtures_ns)
 
-    _spec = _il.spec_from_file_location(
-        "fixtures",
-        os.path.join(os.path.dirname(__file__), "fixtures.py"),
-    )
-    fixtures = _il.module_from_spec(_spec)
-    _spec.loader.exec_module(fixtures)
-
-# If a different module named `fixtures` was importable but doesn't contain the
-# expected attributes, reload the local fixtures file to ensure the tests have
-# the correct data (this helps in grader environments where another package
-# named `fixtures` may be present).
-if not hasattr(fixtures, 'org_payload'):
-    import importlib.util as _il2
-
-    _spec2 = _il2.spec_from_file_location(
-        "fixtures",
-        os.path.join(os.path.dirname(__file__), "fixtures.py"),
-    )
-    fixtures = _il2.module_from_spec(_spec2)
-    _spec2.loader.exec_module(fixtures)
+# Extract expected fixture variables
+fixtures = type('F', (), {})()
+fixtures.org_payload = _fixtures_ns.get('org_payload')
+fixtures.repos_payload = _fixtures_ns.get('repos_payload')
+fixtures.expected_repos = _fixtures_ns.get('expected_repos')
+fixtures.apache2_repos = _fixtures_ns.get('apache2_repos')
 
 
 class TestGithubOrgClient(unittest.TestCase):
