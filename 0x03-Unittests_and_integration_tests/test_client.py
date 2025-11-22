@@ -7,6 +7,7 @@ tests that simulate requests to the GitHub API.
 """
 import os
 import sys
+import importlib.util
 import unittest
 from unittest.mock import Mock, patch, PropertyMock
 
@@ -14,19 +15,15 @@ from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
 
-# Load the local fixtures.py into a private namespace by executing its code.
-# This avoids collisions with other modules named `fixtures` on sys.path.
-_fixtures_ns = {}
-_fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
-with open(_fixtures_path, 'r', encoding='utf-8') as _f:
-    exec(_f.read(), _fixtures_ns)
-
-# Extract expected fixture variables
-fixtures = type('F', (), {})()
-fixtures.org_payload = _fixtures_ns.get('org_payload')
-fixtures.repos_payload = _fixtures_ns.get('repos_payload')
-fixtures.expected_repos = _fixtures_ns.get('expected_repos')
-fixtures.apache2_repos = _fixtures_ns.get('apache2_repos')
+# Load fixtures.py from this directory to avoid import collisions
+spec = importlib.util.spec_from_file_location(
+    "fixtures",
+    os.path.join(os.path.dirname(__file__), "fixtures.py"),
+)
+fixtures = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(fixtures)
+# Ensure module is importable under the standard name
+sys.modules['fixtures'] = fixtures
 
 
 class TestGithubOrgClient(unittest.TestCase):
