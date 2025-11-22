@@ -112,7 +112,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.get_patcher = patch('utils.requests.get')
+        cls.get_patcher = patch('requests.get')
         mock_get = cls.get_patcher.start()
 
         # make requests.get(...).json() return fixtures based on URL
