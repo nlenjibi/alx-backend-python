@@ -21,31 +21,15 @@ if tests_dir not in sys.path:
 
 from client import GithubOrgClient
 
-# Load the fixtures file safely without overwriting any installed `fixtures`
-# package. We execute the source into a temporary namespace and then expose
-# the expected attributes via a SimpleNamespace assigned to `fixtures`.
-
-fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
-fixtures_ns = {}
-with open(fixtures_path, 'r', encoding='utf-8') as f:
-    fixtures_src = f.read()
-
-# Execute the fixtures source in an isolated namespace
-exec(fixtures_src, fixtures_ns)
-
-# Collect only the expected fixture names into a simple object
-from types import ModuleType
-
-# Ensure the expected fixture names exist in the executed namespace and expose
-# them on a module-like object. Using ModuleType avoids any surprises that
-# tools or decorators might have when inspecting a SimpleNamespace.
-fixture_keys = ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos')
-fixtures = ModuleType("_local_fixtures")
-missing = [k for k in fixture_keys if k not in fixtures_ns]
-if missing:
-    raise ImportError(f"Missing fixture(s) in {fixtures_path}: {', '.join(missing)}")
-for k in fixture_keys:
-    setattr(fixtures, k, fixtures_ns[k])
+# Load fixtures.py from this directory under the standard module name
+# `fixtures` so decorators and test discovery find the expected attributes.
+spec = importlib.util.spec_from_file_location(
+    "fixtures",
+    os.path.join(os.path.dirname(__file__), "fixtures.py"),
+)
+fixtures = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(fixtures)
+sys.modules['fixtures'] = fixtures
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -128,7 +112,22 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), [(fixtures.org_payload, fixtures.repos_payload, fixtures.expected_repos, fixtures.apache2_repos),])
+@parameterized_class(
+    (
+        'org_payload',
+        'repos_payload',
+        'expected_repos',
+        'apache2_repos',
+    ),
+    [
+        (
+            fixtures.org_payload,
+            fixtures.repos_payload,
+            fixtures.expected_repos,
+            fixtures.apache2_repos,
+        ),
+    ],
+)
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
 
