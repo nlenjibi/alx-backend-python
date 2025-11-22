@@ -23,13 +23,14 @@ from client import GithubOrgClient
 
 # Load fixtures.py from this directory to avoid import collisions
 spec = importlib.util.spec_from_file_location(
-    "fixtures",
+    "_local_fixtures",
     os.path.join(os.path.dirname(__file__), "fixtures.py"),
 )
 fixtures = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fixtures)
-# Ensure module is importable under the standard name
-sys.modules['fixtures'] = fixtures
+# Do not overwrite sys.modules['fixtures'] (an external package named
+# `fixtures` may exist in some environments). Keep the loaded module in the
+# local variable `fixtures` and avoid registering it under the global name.
 
 
 class TestGithubOrgClient(unittest.TestCase):
