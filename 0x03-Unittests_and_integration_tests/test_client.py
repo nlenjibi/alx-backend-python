@@ -11,7 +11,8 @@ import importlib.util
 import unittest
 from unittest.mock import Mock, patch, PropertyMock
 
-from parameterized import parameterized, parameterized_class
+from parameterized import parameterized
+from parameterized import parameterized_class
 
 from client import GithubOrgClient
 
