@@ -28,9 +28,12 @@ spec = importlib.util.spec_from_file_location(
 )
 fixtures = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fixtures)
-# Do not overwrite sys.modules['fixtures'] (an external package named
-# `fixtures` may exist in some environments). Keep the loaded module in the
-# local variable `fixtures` and avoid registering it under the global name.
+# Register the loaded module under its unique spec name so that any import or
+# lookup by module name (some test tools or decorators may consult
+# sys.modules) can find the executed module. We intentionally avoid setting
+# sys.modules['fixtures'] to prevent collisions with an installed package
+# named `fixtures`.
+sys.modules[spec.name] = fixtures
 
 
 class TestGithubOrgClient(unittest.TestCase):
