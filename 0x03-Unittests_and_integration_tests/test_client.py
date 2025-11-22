@@ -32,7 +32,7 @@ class TestGithubOrgClient(unittest.TestCase):
     ])
     @patch('client.get_json')
     def test_org(self, org_name, mock_get_json):
-        """Test that `org` property returns expected payload and calls get_json."""
+        """Test that `org` returns expected payload and calls get_json."""
         mock_get_json.return_value = {"org": org_name}
         client = GithubOrgClient(org_name)
         self.assertEqual(client.org, mock_get_json.return_value)
@@ -58,7 +58,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @patch('client.get_json')
     def test_public_repos(self, mock_get_json):
-        """Test that `public_repos` returns repo names and calls dependencies."""
+        """Test that `public_repos` returns repo names."""
         mocked_payload = [
             {
                 "name": "repo1",
@@ -99,7 +99,8 @@ class TestGithubOrgClient(unittest.TestCase):
     ])
     def test_has_license(self, repo, license_key, expected):
         """Test has_license returns correct boolean for repo license keys."""
-        self.assertEqual(GithubOrgClient.has_license(repo, license_key), expected)
+        result = GithubOrgClient.has_license(repo, license_key)
+        self.assertEqual(result, expected)
 
 
 @parameterized_class(
@@ -119,13 +120,13 @@ class TestGithubOrgClient(unittest.TestCase):
     ],
 )
 class TestIntegrationGithubOrgClient(unittest.TestCase):
-    """Integration tests for `GithubOrgClient` using fixtures and patched requests."""
+    """Integration tests for GithubOrgClient using fixtures."""
 
     @classmethod
     def setUpClass(cls):
         cls.get_patcher = patch('utils.requests.get')
         mock_get = cls.get_patcher.start()
-        # make requests.get(...).json() return fixtures depending on requested URL
+    # make requests.get(...).json() return fixtures based on URL
 
         # nested function that inspects URL and returns expected fixture
         def _get(url, *args, **kwargs):
@@ -148,7 +149,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         )
 
     def test_public_repos_with_license(self):
-        """Integration test: public_repos filtered by license returns expected."""
+        """Integration test: public_repos filtered by license."""
         client = GithubOrgClient('google')
         self.assertEqual(
             client.public_repos('apache-2.0'),
