@@ -106,7 +106,11 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), [(fixtures.org_payload, fixtures.repos_payload, fixtures.expected_repos, fixtures.apache2_repos),])
+@parameterized_class(('org_payload', 'repos_payload',
+                      'expected_repos', 'apache2_repos'), [
+    (fixtures.org_payload, fixtures.repos_payload,
+     fixtures.expected_repos, fixtures.apache2_repos),
+])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
 
@@ -114,9 +118,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     def setUpClass(cls):
         cls.get_patcher = patch('utils.requests.get')
         mock_get = cls.get_patcher.start()
-    # make requests.get(...).json() return fixtures based on URL
 
-        # nested function that inspects URL and returns expected fixture
+        # make requests.get(...).json() return fixtures based on URL
         def _get(url, *args, **kwargs):
             # org URL returns org_payload, repos URL returns repos_payload
             if str(url).endswith('/repos'):
