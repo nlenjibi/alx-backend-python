@@ -13,6 +13,12 @@ from unittest.mock import Mock, patch, PropertyMock
 
 from parameterized import parameterized, parameterized_class
 
+# Ensure the tests directory is first on sys.path so local modules (client, utils,
+# fixtures) import correctly regardless of the current working directory.
+tests_dir = os.path.dirname(__file__)
+if tests_dir not in sys.path:
+    sys.path.insert(0, tests_dir)
+
 from client import GithubOrgClient
 
 # Load fixtures.py from this directory to avoid import collisions
