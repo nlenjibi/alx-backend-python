@@ -26,6 +26,13 @@ spec.loader.exec_module(fixtures)
 # Ensure module is importable under the standard name
 sys.modules['fixtures'] = fixtures
 
+# Pull fixture objects into local names to avoid referencing a global
+# `fixtures` module object which may collide in some grader environments.
+org_payload = fixtures.org_payload
+repos_payload = fixtures.repos_payload
+expected_repos = fixtures.expected_repos
+apache2_repos = fixtures.apache2_repos
+
 
 class TestGithubOrgClient(unittest.TestCase):
     """Unit tests for `GithubOrgClient` class (unit level)."""
@@ -108,15 +115,8 @@ class TestGithubOrgClient(unittest.TestCase):
 
 
 @parameterized_class(
-    "org_payload, repos_payload, expected_repos, apache2_repos",  # Parameter names as string
-    [
-        (  # Tuple with matching order
-            fixtures.org_payload,
-            fixtures.repos_payload,
-            fixtures.expected_repos,
-            fixtures.apache2_repos
-        )
-    ]
+    ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'),
+    [(org_payload, repos_payload, expected_repos, apache2_repos)],
 )
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
