@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
+"""Tests for the GithubOrgClient class and its integration behavior.
+
+This module contains unit and integration tests for the
+`GithubOrgClient` in `client.py`, including fixtures-based integration
+tests that simulate requests to the GitHub API.
+"""
 import os
 import sys
+import importlib.util
 import unittest
 from unittest.mock import Mock, patch, PropertyMock
 
@@ -8,19 +15,15 @@ from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
 
-# Load the local fixtures.py into a private namespace by executing its code.
-# This avoids collisions with other modules named `fixtures` on sys.path.
-_fixtures_ns = {}
-_fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
-with open(_fixtures_path, 'r', encoding='utf-8') as _f:
-    exec(_f.read(), _fixtures_ns)
-
-# Extract expected fixture variables
-fixtures = type('F', (), {})()
-fixtures.org_payload = _fixtures_ns.get('org_payload')
-fixtures.repos_payload = _fixtures_ns.get('repos_payload')
-fixtures.expected_repos = _fixtures_ns.get('expected_repos')
-fixtures.apache2_repos = _fixtures_ns.get('apache2_repos')
+# Load fixtures.py from this directory to avoid import collisions
+spec = importlib.util.spec_from_file_location(
+    "fixtures",
+    os.path.join(os.path.dirname(__file__), "fixtures.py"),
+)
+fixtures = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(fixtures)
+# Ensure module is importable under the standard name
+sys.modules['fixtures'] = fixtures
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -103,22 +106,11 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-@parameterized_class(
-    (
-        'org_payload',
-        'repos_payload',
-        'expected_repos',
-        'apache2_repos',
-    ),
-    [
-        (
-            fixtures.org_payload,
-            fixtures.repos_payload,
-            fixtures.expected_repos,
-            fixtures.apache2_repos,
-        ),
-    ],
-)
+@parameterized_class(('org_payload', 'repos_payload',
+                      'expected_repos', 'apache2_repos'), [
+    (fixtures.org_payload, fixtures.repos_payload,
+     fixtures.expected_repos, fixtures.apache2_repos),
+])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
 
@@ -126,9 +118,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     def setUpClass(cls):
         cls.get_patcher = patch('utils.requests.get')
         mock_get = cls.get_patcher.start()
-    # make requests.get(...).json() return fixtures based on URL
 
-        # nested function that inspects URL and returns expected fixture
+        # make requests.get(...).json() return fixtures based on URL
         def _get(url, *args, **kwargs):
             # org URL returns org_payload, repos URL returns repos_payload
             if str(url).endswith('/repos'):
