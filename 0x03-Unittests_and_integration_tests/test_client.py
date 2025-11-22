@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Tests for the GithubOrgClient class and its integration behavior.
+
+This module contains unit and integration tests for the
+`GithubOrgClient` in `client.py`, including fixtures-based integration
+tests that simulate requests to the GitHub API.
+"""
 import os
 import sys
 import unittest
