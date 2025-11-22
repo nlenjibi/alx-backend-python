@@ -1,54 +1,26 @@
 #!/usr/bin/env python3
-"""Tests for the GithubOrgClient class and its integration behavior.
-
-This module contains unit and integration tests for the
-`GithubOrgClient` in `client.py`, including fixtures-based integration
-tests that simulate requests to the GitHub API.
-"""
 import os
 import sys
-import importlib.util
 import unittest
 from unittest.mock import Mock, patch, PropertyMock
 
-from parameterized import parameterized
-from parameterized import parameterized_class
+from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
 
-# Load fixtures.py from this directory to avoid import collisions
-_fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
-# Execute the fixtures file into an isolated namespace dict. This avoids
-# registering modules in sys.modules and prevents name collisions while still
-# allowing us to read top-level fixture variables.
+# Load the local fixtures.py into a private namespace by executing its code.
+# This avoids collisions with other modules named `fixtures` on sys.path.
 _fixtures_ns = {}
-with open(_fixtures_path, 'r', encoding='utf-8') as f:
-    code = f.read()
-exec(compile(code, _fixtures_path, 'exec'), _fixtures_ns)
+_fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
+with open(_fixtures_path, 'r', encoding='utf-8') as _f:
+    exec(_f.read(), _fixtures_ns)
 
-try:
-    org_payload = _fixtures_ns['org_payload']
-    repos_payload = _fixtures_ns['repos_payload']
-    expected_repos = _fixtures_ns['expected_repos']
-    apache2_repos = _fixtures_ns['apache2_repos']
-except KeyError as err:
-    raise ImportError(
-        "Could not load required fixture attribute from fixtures.py: %s" % err
-    )
-else:
-    # Also create a lightweight module named 'fixtures' and register it in
-    # sys.modules. Some grader environments import `fixtures` directly and
-    # expect it to expose the names used by the tests. We build a fresh
-    # module object and set only the expected attributes to avoid leaking
-    # other names into sys.modules.
-    import types
-
-    _fixtures_module = types.ModuleType('fixtures')
-    _fixtures_module.org_payload = org_payload
-    _fixtures_module.repos_payload = repos_payload
-    _fixtures_module.expected_repos = expected_repos
-    _fixtures_module.apache2_repos = apache2_repos
-    sys.modules['fixtures'] = _fixtures_module
+# Extract expected fixture variables
+fixtures = type('F', (), {})()
+fixtures.org_payload = _fixtures_ns.get('org_payload')
+fixtures.repos_payload = _fixtures_ns.get('repos_payload')
+fixtures.expected_repos = _fixtures_ns.get('expected_repos')
+fixtures.apache2_repos = _fixtures_ns.get('apache2_repos')
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -132,18 +104,33 @@ class TestGithubOrgClient(unittest.TestCase):
 
 
 @parameterized_class(
-    ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'),
-    [(org_payload, repos_payload, expected_repos, apache2_repos)],
+    (
+        'org_payload',
+        'repos_payload',
+        'expected_repos',
+        'apache2_repos',
+    ),
+    [
+        (
+            fixtures.org_payload,
+            fixtures.repos_payload,
+            fixtures.expected_repos,
+            fixtures.apache2_repos,
+        ),
+    ],
 )
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
 
     @classmethod
     def setUpClass(cls):
-        cls.get_patcher = patch('requests.get')
+        cls.get_patcher = patch('utils.requests.get')
         mock_get = cls.get_patcher.start()
+    # make requests.get(...).json() return fixtures based on URL
 
+        # nested function that inspects URL and returns expected fixture
         def _get(url, *args, **kwargs):
+            # org URL returns org_payload, repos URL returns repos_payload
             if str(url).endswith('/repos'):
                 return Mock(**{"json.return_value": cls.repos_payload})
             return Mock(**{"json.return_value": cls.org_payload})
@@ -155,12 +142,16 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         cls.get_patcher.stop()
 
     def test_public_repos(self):
+        """Integration test: public_repos returns repos from fixtures."""
         client = GithubOrgClient('google')
-        self.assertEqual(client.public_repos(), self.expected_repos)
+        self.assertEqual(
+            client.public_repos(), self.expected_repos
+        )
 
     def test_public_repos_with_license(self):
+        """Integration test: public_repos filtered by license."""
         client = GithubOrgClient('google')
         self.assertEqual(
             client.public_repos('apache-2.0'),
-            self.apache2_repos
+            self.apache2_repos,
         )
