@@ -31,6 +31,13 @@ fixtures = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fixtures)
 sys.modules['fixtures'] = fixtures
 
+# Expose fixture values as module-level names to avoid any lookup/collision
+# issues where another `fixtures` module might be present in sys.modules.
+org_payload = fixtures.org_payload
+repos_payload = fixtures.repos_payload
+expected_repos = fixtures.expected_repos
+apache2_repos = fixtures.apache2_repos
+
 
 class TestGithubOrgClient(unittest.TestCase):
     """Unit tests for `GithubOrgClient` class (unit level)."""
@@ -121,10 +128,10 @@ class TestGithubOrgClient(unittest.TestCase):
     ),
     [
         (
-            fixtures.org_payload,
-            fixtures.repos_payload,
-            fixtures.expected_repos,
-            fixtures.apache2_repos,
+            org_payload,
+            repos_payload,
+            expected_repos,
+            apache2_repos,
         ),
     ],
 )
