@@ -24,7 +24,6 @@ from client import GithubOrgClient
 # Load the fixtures file safely without overwriting any installed `fixtures`
 # package. We execute the source into a temporary namespace and then expose
 # the expected attributes via a SimpleNamespace assigned to `fixtures`.
-from types import SimpleNamespace
 
 fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
 fixtures_ns = {}
@@ -35,9 +34,18 @@ with open(fixtures_path, 'r', encoding='utf-8') as f:
 exec(fixtures_src, fixtures_ns)
 
 # Collect only the expected fixture names into a simple object
+from types import ModuleType
+
+# Ensure the expected fixture names exist in the executed namespace and expose
+# them on a module-like object. Using ModuleType avoids any surprises that
+# tools or decorators might have when inspecting a SimpleNamespace.
 fixture_keys = ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos')
-fixtures_dict = {k: fixtures_ns[k] for k in fixture_keys if k in fixtures_ns}
-fixtures = SimpleNamespace(**fixtures_dict)
+fixtures = ModuleType("_local_fixtures")
+missing = [k for k in fixture_keys if k not in fixtures_ns]
+if missing:
+    raise ImportError(f"Missing fixture(s) in {fixtures_path}: {', '.join(missing)}")
+for k in fixture_keys:
+    setattr(fixtures, k, fixtures_ns[k])
 
 
 class TestGithubOrgClient(unittest.TestCase):
