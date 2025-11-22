@@ -13,29 +13,6 @@ from unittest.mock import Mock, patch, PropertyMock
 
 from parameterized import parameterized, parameterized_class
 
-
-# Keep a reference to the original implementation and provide a
-# wrapper named `parameterized_class` so the file contains the
-# literal import the autograder may look for while accepting the
-# dict-style decorator form at class definition time.
-_parameterized_class = parameterized_class
-
-
-def parameterized_class(*args, **kwargs):
-    """Wrapper that accepts dict-style and tuple-of-values forms.
-
-    Converts a list of dicts into a list of tuples aligned to the
-    provided names tuple, then delegates to the original
-    `_parameterized_class` implementation.
-    """
-    if len(args) >= 2 and isinstance(args[0], tuple) and isinstance(args[1], list):
-        names = args[0]
-        values = args[1]
-        if values and isinstance(values[0], dict):
-            transformed = [tuple(d[name] for name in names) for d in values]
-            return _parameterized_class(names, transformed)
-    return _parameterized_class(*args, **kwargs)
-
 from client import GithubOrgClient
 
 # Load fixtures.py from this directory to avoid import collisions
@@ -129,7 +106,7 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), [{'org_payload': fixtures.org_payload, 'repos_payload': fixtures.repos_payload, 'expected_repos': fixtures.expected_repos, 'apache2_repos': fixtures.apache2_repos},])
+@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), [(fixtures.org_payload, fixtures.repos_payload, fixtures.expected_repos, fixtures.apache2_repos),])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
 
