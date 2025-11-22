@@ -18,20 +18,24 @@ from client import GithubOrgClient
 
 # Load fixtures.py from this directory to avoid import collisions
 spec = importlib.util.spec_from_file_location(
-    "fixtures",
+    "_local_fixtures",
     os.path.join(os.path.dirname(__file__), "fixtures.py"),
 )
-fixtures = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(fixtures)
-# Ensure module is importable under the standard name
-sys.modules['fixtures'] = fixtures
+_local_fixtures = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(_local_fixtures)
 
-# Pull fixture objects into local names to avoid referencing a global
-# `fixtures` module object which may collide in some grader environments.
-org_payload = fixtures.org_payload
-repos_payload = fixtures.repos_payload
-expected_repos = fixtures.expected_repos
-apache2_repos = fixtures.apache2_repos
+# Copy fixture objects into local names. We intentionally avoid inserting the
+# module into sys.modules under the name 'fixtures' to prevent collisions with
+# other modules named `fixtures` that may exist in grader/CI environments.
+try:
+    org_payload = _local_fixtures.org_payload
+    repos_payload = _local_fixtures.repos_payload
+    expected_repos = _local_fixtures.expected_repos
+    apache2_repos = _local_fixtures.apache2_repos
+except AttributeError as err:
+    raise ImportError(
+        "Could not load required fixture attributes from fixtures.py: %s" % err
+    )
 
 
 class TestGithubOrgClient(unittest.TestCase):
