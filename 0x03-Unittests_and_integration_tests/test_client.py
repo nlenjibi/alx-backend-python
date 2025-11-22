@@ -21,19 +21,23 @@ if tests_dir not in sys.path:
 
 from client import GithubOrgClient
 
-# Load fixtures.py from this directory to avoid import collisions
-spec = importlib.util.spec_from_file_location(
-    "_local_fixtures",
-    os.path.join(os.path.dirname(__file__), "fixtures.py"),
-)
-fixtures = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(fixtures)
-# Register the loaded module under its unique spec name so that any import or
-# lookup by module name (some test tools or decorators may consult
-# sys.modules) can find the executed module. We intentionally avoid setting
-# sys.modules['fixtures'] to prevent collisions with an installed package
-# named `fixtures`.
-sys.modules[spec.name] = fixtures
+# Load the fixtures file safely without overwriting any installed `fixtures`
+# package. We execute the source into a temporary namespace and then expose
+# the expected attributes via a SimpleNamespace assigned to `fixtures`.
+from types import SimpleNamespace
+
+fixtures_path = os.path.join(os.path.dirname(__file__), "fixtures.py")
+fixtures_ns = {}
+with open(fixtures_path, 'r', encoding='utf-8') as f:
+    fixtures_src = f.read()
+
+# Execute the fixtures source in an isolated namespace
+exec(fixtures_src, fixtures_ns)
+
+# Collect only the expected fixture names into a simple object
+fixture_keys = ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos')
+fixtures_dict = {k: fixtures_ns[k] for k in fixture_keys if k in fixtures_ns}
+fixtures = SimpleNamespace(**fixtures_dict)
 
 
 class TestGithubOrgClient(unittest.TestCase):
