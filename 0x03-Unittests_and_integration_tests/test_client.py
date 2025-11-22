@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import importlib.util
 import os
 import sys
 import unittest
@@ -9,18 +8,7 @@ from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
 
-# Load fixtures.py from this directory to avoid import collisions
-spec = importlib.util.spec_from_file_location(
-    "fixtures",
-    os.path.join(
-        os.path.dirname(__file__),
-        "fixtures.py",
-    ),
-)
-fixtures = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(fixtures)
-# Ensure module is importable under the standard name
-sys.modules['fixtures'] = fixtures
+import fixtures
 
 
 class TestGithubOrgClient(unittest.TestCase):
