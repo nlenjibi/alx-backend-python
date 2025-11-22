@@ -13,34 +13,6 @@ from unittest.mock import Mock, patch, PropertyMock
 
 from parameterized import parameterized, parameterized_class
 
-
-# Keep a reference to the original decorator implementation and
-# still provide a wrapper named `parameterized_class` so the file
-# contains the literal import the autograder may look for.
-_parameterized_class = parameterized_class
-
-
-def parameterized_class(*args, **kwargs):
-    """Wrapper that accepts both dict-style and tuple-of-values forms.
-
-    If the decorator is used with a list of dicts (dict-style), convert
-    each dict to a tuple of values matching the names order so the
-    underlying `_parameterized_class` receives the tuple-of-values form
-    that produces proper runtime attributes.
-    """
-    # If args looks like (names_tuple, list_of_dicts)
-    if len(args) >= 2 and isinstance(args[0], tuple) and isinstance(args[1], list):
-        names = args[0]
-        values = args[1]
-        if values and isinstance(values[0], dict):
-            # Transform list of dicts into list of tuples aligned to names
-            transformed = []
-            for d in values:
-                transformed.append(tuple(d[name] for name in names))
-            return _parameterized_class(names, transformed)
-    # Fallback: call the original decorator as-is
-    return _parameterized_class(*args, **kwargs)
-
 from client import GithubOrgClient
 
 # Load fixtures.py from this directory to avoid import collisions
@@ -134,7 +106,7 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), [{'org_payload': fixtures.org_payload, 'repos_payload': fixtures.repos_payload, 'expected_repos': fixtures.expected_repos, 'apache2_repos': fixtures.apache2_repos},])
+@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), [(fixtures.org_payload, fixtures.repos_payload, fixtures.expected_repos, fixtures.apache2_repos),])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient using fixtures."""
 
