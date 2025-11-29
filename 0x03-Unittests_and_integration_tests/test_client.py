@@ -89,6 +89,21 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+<<<<<<< HEAD
+        cls.get_patcher = patch('utils.requests.get')
+        mock_get = cls.get_patcher.start()
+        # make requests.get(...).json() return fixtures depending on the URL
+        def _side_effect(url, *args, **kwargs):
+            if url == cls.org_payload.get('repos_url').rsplit('/', 1)[0]:
+                # https://api.github.com/orgs/google -> return org payload
+                return Mock(**{"json.return_value": cls.org_payload})
+            if url == cls.org_payload.get('repos_url'):
+                # https://api.github.com/orgs/google/repos -> return repos payload
+                return Mock(**{"json.return_value": cls.repos_payload})
+            raise RuntimeError("Unmocked URL: {}".format(url))
+
+        mock_get.side_effect = _side_effect
+=======
         """Set up mock for requests.get to return fixture responses."""
         cls.get_patcher = patch('requests.get')
         cls.mock_get = cls.get_patcher.start()
@@ -104,6 +119,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             return mock_resp
 
         cls.mock_get.side_effect = side_effect
+>>>>>>> 758c22300e1ad38c532e4e167ec5b98d6890d72b
 
     @classmethod
     def tearDownClass(cls):
