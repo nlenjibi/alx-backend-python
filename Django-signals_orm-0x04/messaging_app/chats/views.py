@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
 from django.contrib.auth import get_user_model
 
-from Django-signals_orm-0x04.messaging.models import Message
+from messaging.models import Message
 
 
 @cache_page(60)
@@ -13,16 +13,7 @@ def conversation_view(request, user_id: int):
     if not request.user.is_authenticated or other is None:
         return JsonResponse({"error": "Unauthorized or user not found"}, status=401)
 
-    qs = (
-        Message.objects.with_participants()
-        .filter(
-            (
-                (Message._meta.get_field("sender").model.objects.filter(pk=request.user.pk))
-            )
-        )
-    )
-
-    # Simpler filter: messages where participants are the pair
+    # Messages where participants are the pair; eager-load participants and replies
     qs = Message.objects.with_participants().filter(
         sender_id__in=[request.user.id, other.id], receiver_id__in=[request.user.id, other.id]
     ).with_thread()

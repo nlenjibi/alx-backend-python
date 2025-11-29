@@ -35,6 +35,13 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     edited = models.BooleanField(default=False)
+    edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="edited_messages",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     read = models.BooleanField(default=False, db_index=True)
     parent_message = models.ForeignKey(
         "self", null=True, blank=True, related_name="replies", on_delete=models.CASCADE
