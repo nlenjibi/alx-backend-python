@@ -19,6 +19,7 @@ RUN useradd -ms /bin/bash appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
+# Expose Django port; map with `-p 8000:8000` when running the container
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"]
