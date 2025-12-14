@@ -1,0 +1,18 @@
+Month 2 Work Log – ProDev Back-end
+
+Summary:
+- Focused exclusively on hardening the ProDev back-end toolchain by containerizing the Django messaging app, wiring Docker Compose, and validating the flow end-to-end in a clean environment.
+
+Achievements:
+- Built a deterministic Docker image with migration hooks and documented environment variables, ensuring a repeatable developer onboarding story.
+- Composed a two-service stack (web + MySQL) with persistent volumes and health checks so QA can spin up the platform with a single command.
+- Captured a comprehensive requirements freeze plus `.env` guidance to reduce the “works on my machine” drift across teammates.
+
+Learnings from Challenges:
+- Fought dependency mismatches between local SQLite defaults and containerized MySQL; solved it by driving all settings from env vars and adding sensible fallbacks.
+- Realized health checks are critical—refined them after Docker refused to mark the DB ready, which surfaced how timing issues can derail orchestrated stacks.
+
+Monthly Highlights:
+- Demoed the containerized messaging API to peers, showcasing instant setup via `docker compose up` and reinforcing best practices around secrets, tagging, and documentation.
+
+#ALX_SE #ALX_PDBE #ALX_BE @alx_africa
