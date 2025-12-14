@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NAMESPACE=${NAMESPACE:-messaging}
+BLUE_FILE=${BLUE_FILE:-blue_deployment.yaml}
+GREEN_FILE=${GREEN_FILE:-green_deployment.yaml}
+SERVICE_FILE=${SERVICE_FILE:-kubeservice.yaml}
+LOG_LINES=${LOG_LINES:-200}
+
+require() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "[ERROR] $1 is required." >&2
+        exit 1
+    fi
+}
+
+require kubectl
+
+apply_manifest() {
+    local file=$1
+    echo "[INFO] Applying ${file}"
+    kubectl apply -n "${NAMESPACE}" -f "${file}"
+}
+
+apply_manifest "${BLUE_FILE}"
+apply_manifest "${GREEN_FILE}"
+apply_manifest "${SERVICE_FILE}"
+
+kubectl rollout status deployment/messaging-app-blue -n "${NAMESPACE}"
+kubectl rollout status deployment/messaging-app-green -n "${NAMESPACE}"
+
+echo "[INFO] Blue/green pods:"
+kubectl get pods -n "${NAMESPACE}" -l app=messaging-app -o wide
+
+echo "[INFO] Inspecting last ${LOG_LINES} log lines from the green version to spot errors..."
+GREEN_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=messaging-app,version=green -o jsonpath='{.items[0].metadata.name}')
+if [[ -z "${GREEN_POD}" ]]; then
+    echo "[ERROR] No green pod detected." >&2
+    exit 1
+fi
+kubectl logs -n "${NAMESPACE}" "${GREEN_POD}" --tail="${LOG_LINES}"

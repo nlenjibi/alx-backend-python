@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROFILE=${MINIKUBE_PROFILE:-messaging-app}
+DRIVER=${MINIKUBE_DRIVER:-docker}
+
+require() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "[ERROR] $1 is required but not installed." >&2
+        exit 1
+    fi
+}
+
+require minikube
+require kubectl
+
+echo "[INFO] Starting minikube profile '${PROFILE}' with driver '${DRIVER}' if needed..."
+if ! minikube status -p "$PROFILE" >/dev/null 2>&1; then
+    minikube start -p "$PROFILE" --driver="$DRIVER"
+else
+    echo "[INFO] Minikube already running."
+fi
+
+kubectl config use-context "${PROFILE}" >/dev/null
+
+echo "[INFO] Cluster information:" 
+kubectl cluster-info
+
+echo "[INFO] Listing cluster nodes for verification..."
+kubectl get nodes -o wide
+
+echo "[INFO] Pods currently scheduled (all namespaces):"
+kubectl get pods -A -o wide

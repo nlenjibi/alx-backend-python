@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NAMESPACE=${NAMESPACE:-messaging}
+DEPLOYMENT=${DEPLOYMENT:-messaging-app-blue}
+DEPLOYMENT_FILE=${DEPLOYMENT_FILE:-blue_deployment.yaml}
+PROBE_URL=${PROBE_URL:-"http://127.0.0.1:8000/health/"}
+PROBE_INTERVAL=${PROBE_INTERVAL:-5}
+
+require() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "[ERROR] $1 is required." >&2
+        exit 1
+    fi
+}
+
+require kubectl
+require curl
+
+echo "[INFO] Applying ${DEPLOYMENT_FILE} to trigger rolling update..."
+kubectl apply -n "${NAMESPACE}" -f "${DEPLOYMENT_FILE}"
+
+echo "[INFO] Monitoring rollout for ${DEPLOYMENT}"
+probe_loop() {
+    while true; do
+        if curl -sf "${PROBE_URL}" >/dev/null; then
+            printf '.'
+        else
+            printf 'x'
+        fi
+        sleep "${PROBE_INTERVAL}"
+    done
+}
+
+probe_loop &
+PROBER_PID=$!
+trap 'kill ${PROBER_PID} >/dev/null 2>&1 || true' EXIT
+
+kubectl rollout status deployment/"${DEPLOYMENT}" -n "${NAMESPACE}"
+kill "${PROBER_PID}" >/dev/null 2>&1 || true
+trap - EXIT
+
+echo "\n[INFO] Current pods after rolling update:"
+kubectl get pods -n "${NAMESPACE}" -l app=messaging-app -o wide

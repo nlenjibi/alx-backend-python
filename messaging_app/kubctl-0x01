@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NAMESPACE=${NAMESPACE:-messaging}
+DEPLOYMENT=${DEPLOYMENT:-messaging-app}
+TARGET_REPLICAS=${TARGET_REPLICAS:-3}
+LOAD_TEST_URL=${LOAD_TEST_URL:-"http://127.0.0.1:8000/health/"}
+METRICS_MAX_WAIT=${METRICS_MAX_WAIT:-30}
+
+require() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "[ERROR] $1 is required for this script." >&2
+        exit 1
+    fi
+}
+
+require kubectl
+
+echo "[INFO] Scaling ${DEPLOYMENT} in namespace ${NAMESPACE} to ${TARGET_REPLICAS} replicas..."
+kubectl scale deployment "${DEPLOYMENT}" -n "${NAMESPACE}" --replicas "${TARGET_REPLICAS}"
+
+kubectl rollout status deployment "${DEPLOYMENT}" -n "${NAMESPACE}"
+
+echo "[INFO] Current pods after scaling:"
+kubectl get pods -n "${NAMESPACE}" -o wide
+
+if command -v wrk >/dev/null 2>&1; then
+    echo "[INFO] Running wrk load test against ${LOAD_TEST_URL}"
+    wrk -t4 -c32 -d30s "${LOAD_TEST_URL}"
+else
+    echo "[WARN] wrk not installed; skipping HTTP load test." >&2
+fi
+
+if kubectl top pods -n "${NAMESPACE}" >/dev/null 2>&1; then
+    echo "[INFO] Resource usage from metrics-server:"
+    kubectl top pods -n "${NAMESPACE}"
+else
+    echo "[WARN] kubectl top failed; ensure metrics-server is enabled on the cluster." >&2
+fi
