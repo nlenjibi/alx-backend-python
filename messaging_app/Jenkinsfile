@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+    environment {
+        VENV = "venv"
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-credentials-id', url: 'https://github.com/TimothyNlenjibi/alx-backend-python.git'
+            }
+        }
+        stage('Set up Python') {
+            steps {
+                sh 'python -m venv $VENV'
+                sh './$VENV/Scripts/activate && pip install --upgrade pip'
+                sh './$VENV/Scripts/activate && pip install -r messaging_app/requirements.txt'
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                sh './$VENV/Scripts/activate && pytest messaging_app --junitxml=report.xml'
+            }
+            post {
+                always {
+                    junit 'report.xml'
+                }
+            }
+        }
+            stage('Build Docker Image') {
+                steps {
+                    script {
+                        dockerImage = docker.build("yourdockerhubusername/messaging_app:${env.BUILD_NUMBER}")
+                    }
+                }
+            }
+            stage('Push Docker Image') {
+                steps {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials-id', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+                        script {
+                            docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials-id') {
+                                dockerImage.push()
+                            }
+                        }
+                    }
+                }
+            }
+    }
+}
